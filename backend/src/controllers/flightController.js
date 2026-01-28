@@ -1,9 +1,10 @@
 const redis = require('../services/redisClient');
+const { scanKeys } = require('../services/redisUtils');
 const axios = require('axios');
 
 const getLiveFlights = async (req, res) => {
   try {
-    const keys = await redis.keys('flight:*');
+    const keys = await scanKeys('flight:*', { limit: 200 });
     const flights = [];
 
     for (const key of keys) {
@@ -11,8 +12,7 @@ const getLiveFlights = async (req, res) => {
       if (data) flights.push(JSON.parse(data));
     }
 
-    const limitedFlights = flights.slice(0, 200);
-    res.json(limitedFlights);
+    res.json(flights);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch flights from Redis' });
   }
@@ -68,7 +68,7 @@ const getFlightWeatherAlert = async (req, res) => {
 
 const getAllWeatherAlerts = async (req, res) => {
   try {
-    const keys = await redis.keys('weatherAlert:*');
+    const keys = await scanKeys('weatherAlert:*');
     const alerts = [];
 
     for (const key of keys) {

@@ -3,17 +3,18 @@ const turf = require('@turf/turf');
 const NFZAlert = require('../models/nfzAlertModel');
 const RestrictedAirspace = require('../models/restrictedAirspaceModel');
 const redisClient = require('./redisClient');
+const { scanKeys } = require('./redisUtils');
 
 const getRestrictedAirspaces = async () => {
-  const res = await axios.get('/api/airspaces/restricted');
-  return res.data;
+  // Prefer direct DB access here (this is backend-internal code).
+  return RestrictedAirspace.find({}, 'name geometry country type').lean();
 };
 
 async function checkNFZViolationsBatch(limit = 50) {
-  const keys = await redisClient.keys('flight:*');
+  const keys = await scanKeys('flight:*', { limit });
   const nfzZones = await RestrictedAirspace.find({}, 'name geometry').lean();
 
-  for (const key of keys.slice(0, limit)) {
+  for (const key of keys) {
     const data = await redisClient.get(key);
     if (!data) continue;
 

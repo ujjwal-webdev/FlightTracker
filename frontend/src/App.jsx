@@ -5,10 +5,13 @@ import BusiestRoutes from './components/BusiestRoutes';
 import GraphRoutes from './components/GraphRoutes';
 import WeatherAlertsTable from './components/WeatherAlertsTable';
 import NFZAlertTable from './components/NFZAlertTable';
+import AdminControls from './components/AdminControls';
 
 function App() {
   return (
     <div className="flex flex-col w-full min-h-screen bg-gray-100">
+      <AdminControls />
+
       <div className="w-full h-[60vh]">
         <AircraftMap />
       </div>

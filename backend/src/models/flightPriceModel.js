@@ -13,4 +13,7 @@ const flightPriceSchema = new mongoose.Schema({
   fetchedAt: { type: Date, default: Date.now }
 });
 
+// Speeds up `/prices` and calendar lookups.
+flightPriceSchema.index({ origin: 1, destination: 1, departure_date: 1 });
+
 module.exports = mongoose.model('FlightPrice', flightPriceSchema);

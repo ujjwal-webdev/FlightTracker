@@ -1,4 +1,5 @@
 const redisClient = require('../services/redisClient');
+const { scanKeys } = require('../services/redisUtils');
 const { getWeatherByCoords } = require('../services/weatherService');
 
 function toRadians(degrees) {
@@ -37,8 +38,7 @@ function destinationPoint(lat, lon, bearing, distanceKm = 100) {
 
 async function syncWeatherAlerts() {
   try {
-    const keys = await redisClient.keys('flight:*');
-    const limitedKeys = keys.slice(0, 10);
+    const limitedKeys = await scanKeys('flight:*', { limit: 10 });
     const rawFlights = await redisClient.mGet(limitedKeys);
     const flights = rawFlights.filter(Boolean).map(JSON.parse);
 

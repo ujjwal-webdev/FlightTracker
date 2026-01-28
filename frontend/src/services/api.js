@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+// Configure API base URL via Vite env var (set at build time on Render).
+// Example: VITE_API_URL=https://your-backend.onrender.com/api
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
 const api = axios.create({
-  baseURL: 'http://localhost:3000/api',
+  baseURL,
 });
 
 export default api;

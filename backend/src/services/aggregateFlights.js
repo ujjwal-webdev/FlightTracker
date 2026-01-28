@@ -22,11 +22,18 @@ async function aggregateBusiestRoutes(limit = 20) {
     { $limit: limit }
   ]);
 
+  // Compute maxima for normalization (avoid relying on undefined fields).
+  const maxMinPrice = all.reduce((max, r) => Math.max(max, r.minPrice || 0), 0);
+  const maxAvgStops = all.reduce((max, r) => Math.max(max, r.avgStops || 0), 0);
+
   const normalized = all.map(route => {
-    const { minPrice, avgStops, maxPrice, maxStops, avgPrice } = route;
-    const normPrice = minPrice / (maxPrice || 1);
-    const normStops = avgStops / (maxStops || 1);
-    const bestScore = (normPrice * 0.6) + (normStops * 0.4);    
+    const minPrice = route.minPrice || 0;
+    const avgStops = route.avgStops || 0;
+
+    // Lower is better: cheaper + fewer stops.
+    const normPrice = maxMinPrice ? (minPrice / maxMinPrice) : 0;
+    const normStops = maxAvgStops ? (avgStops / maxAvgStops) : 0;
+    const bestScore = (normPrice * 0.6) + (normStops * 0.4);
 
     return {
       origin: route._id.origin,
@@ -34,8 +41,8 @@ async function aggregateBusiestRoutes(limit = 20) {
       count: route.flightCount,
       minPrice,
       avgStops,
-      avgPrice: parseFloat(route.avgPrice.toFixed(2)),
-      bestScore: parseFloat(bestScore.toFixed(3))
+      avgPrice: parseFloat((route.avgPrice || 0).toFixed(2)),
+      bestScore: parseFloat(bestScore.toFixed(3)),
     };
   });
 

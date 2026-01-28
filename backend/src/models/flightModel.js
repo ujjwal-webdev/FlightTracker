@@ -13,4 +13,7 @@ const flightSchema = new mongoose.Schema({
   timestamp: Date
 }, { timestamps: true });
 
+// Keep only the latest snapshot per aircraft (prevents unbounded growth on free tiers).
+flightSchema.index({ icao24: 1 }, { unique: true });
+
 module.exports = mongoose.model('Flight', flightSchema);

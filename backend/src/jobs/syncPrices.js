@@ -15,17 +15,32 @@ const syncPrices = async (origin, destination) => {
       found_at
     } = flight;    
 
-    await FlightPrice.create({
-      origin,
-      destination,
-      airline,
-      departure_date: depart_date,
-      return_date: return_date || null,
-      price: value,
-      currency: "USD",
-      transfers: number_of_changes,
-      updated_at: new Date(found_at),
-    });    
+    // Upsert to avoid duplicates on repeated sync runs.
+    // Keyed by route + departure date + airline + transfers.
+    await FlightPrice.updateOne(
+      {
+        origin,
+        destination,
+        departure_date: depart_date,
+        airline: airline || '',
+        transfers: number_of_changes,
+      },
+      {
+        $set: {
+          origin,
+          destination,
+          airline: airline || '',
+          departure_date: depart_date,
+          return_date: return_date || null,
+          price: value,
+          currency: currency || 'USD',
+          transfers: number_of_changes,
+          updated_at: found_at ? new Date(found_at) : undefined,
+          fetchedAt: new Date(),
+        }
+      },
+      { upsert: true }
+    );
   }
 
   console.log(`Synced prices from ${origin} to ${destination}`);

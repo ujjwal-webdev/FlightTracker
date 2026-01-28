@@ -10,3 +10,15 @@ Currently, two official plugins are available:
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+## Environment variables
+
+### Frontend
+
+- **`VITE_API_URL`**: backend API base URL (must include `/api`)
+  - Example (Render): `https://your-backend.onrender.com/api`
+  - Example (local): `http://localhost:3000/api`
+
+- **`VITE_SHOW_ADMIN`**: set to `true` to show the Admin Controls panel (manual sync buttons)
+  - Example: `VITE_SHOW_ADMIN=true`
+

@@ -2,14 +2,19 @@ import { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import api from '../services/api';
+import { AIRPORTS } from '../constants/airports';
 
 const CalendarPrices = () => {
   const [calendarData, setCalendarData] = useState([]);
+  // "Applied" route used for fetching
   const [origin, setOrigin] = useState('DEL');
   const [destination, setDestination] = useState('LHR');
+  // Draft route (UI selections)
+  const [draftOrigin, setDraftOrigin] = useState('DEL');
+  const [draftDestination, setDraftDestination] = useState('LHR');
   const [selectedMonth, setSelectedMonth] = useState(new Date());
 
-  console.log('selectedMonth:', selectedMonth);
+  const formatAirport = (a) => `${a.code} — ${a.city}, ${a.country}`;
 
   const fetchCalendarData = async (origin, destination, month) => {
     try {
@@ -32,7 +37,7 @@ const CalendarPrices = () => {
 
   useEffect(() => {
     fetchCalendarData(origin, destination, selectedMonth);
-  }, [origin, destination, selectedMonth]);
+  }, [selectedMonth]);
 
   const getPriceForDate = (date) => {
        const dateStr = date.toLocaleDateString('en-CA');
@@ -45,21 +50,39 @@ const CalendarPrices = () => {
     <div className="flex flex-col items-center p-6">
       <h1 className="text-2xl font-bold mb-6">Cheapest Flight Calendar</h1>
 
-      <div className="flex gap-4 mb-6">
-        <input
-          type="text"
-          value={origin}
-          onChange={(e) => setOrigin(e.target.value.toUpperCase())}
-          placeholder="Origin (e.g. DEL)"
-          className="p-2 border rounded"
-        />
-        <input
-          type="text"
-          value={destination}
-          onChange={(e) => setDestination(e.target.value.toUpperCase())}
-          placeholder="Destination (e.g. LHR)"
-          className="p-2 border rounded"
-        />
+      <div className="flex flex-col md:flex-row gap-4 mb-6 w-full justify-center items-center">
+        <select
+          value={draftOrigin}
+          onChange={(e) => setDraftOrigin(e.target.value)}
+          className="p-2 border rounded min-w-[280px]"
+        >
+          {AIRPORTS.map((a) => (
+            <option key={a.code} value={a.code}>
+              {formatAirport(a)}
+            </option>
+          ))}
+        </select>
+        <select
+          value={draftDestination}
+          onChange={(e) => setDraftDestination(e.target.value)}
+          className="p-2 border rounded min-w-[280px]"
+        >
+          {AIRPORTS.map((a) => (
+            <option key={a.code} value={a.code}>
+              {formatAirport(a)}
+            </option>
+          ))}
+        </select>
+        <button
+          onClick={() => {
+            setOrigin(draftOrigin);
+            setDestination(draftDestination);
+            fetchCalendarData(draftOrigin, draftDestination, selectedMonth);
+          }}
+          className="!bg-blue-600 !text-white px-4 py-2 rounded-md font-semibold shadow-sm hover:!bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-400"
+        >
+          Search
+        </button>
       </div>
 
       <Calendar

@@ -7,7 +7,14 @@ const travelAPI = axios.create({
   }
 });
 
-const fetchMonthlyPrices = async (origin, destination, month = '2025-05-01', currency = 'USD') => {
+function currentMonthStartISO() {
+  const d = new Date();
+  const yyyy = d.getUTCFullYear();
+  const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+  return `${yyyy}-${mm}-01`;
+}
+
+const fetchMonthlyPrices = async (origin, destination, month = currentMonthStartISO(), currency = 'USD') => {
     try {
       const res = await travelAPI.get('/prices/month-matrix', {
         params: {
