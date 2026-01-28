@@ -5,10 +5,6 @@ function WeatherAlertsTable() {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchAlerts();
-  }, []);
-
   const fetchAlerts = async () => {
     try {
       const res = await api.get('/flights/alerts/all');
@@ -19,6 +15,18 @@ function WeatherAlertsTable() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // Fetch only when admin triggers a refresh (no automatic fetch by default).
+    const handler = (e) => {
+      if (e?.detail?.key === 'weatherAlerts') {
+        setLoading(true);
+        fetchAlerts();
+      }
+    };
+    window.addEventListener('admin:refresh', handler);
+    return () => window.removeEventListener('admin:refresh', handler);
+  }, []);
 
   return (
     <div className="px-4 pb-10 pt-6">

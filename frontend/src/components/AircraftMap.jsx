@@ -25,9 +25,12 @@ const AircraftMap = () => {
   };
 
   useEffect(() => {
-    fetchFlights(); // Initial fetch
-    const interval = setInterval(fetchFlights, 15000); // Refresh every 15s
-    return () => clearInterval(interval); // Cleanup
+    // Fetch only when admin triggers a refresh (no background polling by default).
+    const handler = (e) => {
+      if (e?.detail?.key === 'flights') fetchFlights();
+    };
+    window.addEventListener('admin:refresh', handler);
+    return () => window.removeEventListener('admin:refresh', handler);
   }, []);
 
   const [searchTerm, setSearchTerm] = useState('');

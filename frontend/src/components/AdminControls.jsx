@@ -22,12 +22,34 @@ export default function AdminControls() {
     ? { Authorization: `Bearer ${token}` }
     : {};
 
+  function triggerRefresh(keys) {
+    const arr = Array.isArray(keys) ? keys : [keys];
+    for (const key of arr) {
+      window.dispatchEvent(new CustomEvent('admin:refresh', { detail: { key } }));
+    }
+    // Because backend syncs run in the background, refresh again shortly after.
+    setTimeout(() => {
+      for (const key of arr) {
+        window.dispatchEvent(new CustomEvent('admin:refresh', { detail: { key } }));
+      }
+    }, 8000);
+  }
+
   async function run(path, body) {
     setBusy(true);
     setMessage('');
     try {
       const res = await api.post(path, body || {}, { headers: authHeaders, timeout: 30000 });
       setMessage(`OK: ${path}`);
+
+      // Kick the UI to re-fetch relevant data after starting a job.
+      if (path === '/admin/sync/opensky') triggerRefresh('flights');
+      if (path === '/admin/sync/airspaces') triggerRefresh('airspaces');
+      if (path === '/admin/sync/nfz') triggerRefresh('nfzAlerts');
+      if (path === '/admin/sync/weather') triggerRefresh('weatherAlerts');
+      if (path === '/admin/sync/prices') triggerRefresh(['prices', 'calendarPrices', 'busiestRoutes']);
+      if (path === '/admin/sync/neo4j') triggerRefresh('busiestRoutes');
+
       return res.data;
     } catch (e) {
       setMessage(`ERROR: ${path} (${e?.response?.status || ''}) ${e?.response?.data?.error || e.message}`);

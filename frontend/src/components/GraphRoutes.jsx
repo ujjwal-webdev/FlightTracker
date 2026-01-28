@@ -5,37 +5,42 @@ import api from '../services/api'; // Adjust path as needed
 function GraphRoutes() {
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
 
-  useEffect(() => {
-    const fetchRoutes = async () => {
-      try {
-        const res = await api.get('/flights/busiest');
-        const flights = res.data;
+  const fetchRoutes = async () => {
+    try {
+      const res = await api.get('/flights/busiest');
+      const flights = res.data;
 
-        const nodesSet = new Set();
-        const links = [];
+      const nodesSet = new Set();
+      const links = [];
 
-        flights.forEach(route => {
-          nodesSet.add(route.origin);
-          nodesSet.add(route.destination);
-          links.push({
-            source: route.origin,
-            target: route.destination,
-            value: route.count,
-            minPrice: route.minPrice,
-            avgStops: route.avgStops,
-            bestScore: route.bestScore,
-          });
+      flights.forEach(route => {
+        nodesSet.add(route.origin);
+        nodesSet.add(route.destination);
+        links.push({
+          source: route.origin,
+          target: route.destination,
+          value: route.count,
+          minPrice: route.minPrice,
+          avgStops: route.avgStops,
+          bestScore: route.bestScore,
         });
+      });
 
-        const nodes = Array.from(nodesSet).map(code => ({ id: code }));
+      const nodes = Array.from(nodesSet).map(code => ({ id: code }));
 
-        setGraphData({ nodes, links });
-      } catch (err) {
-        console.error('Error fetching busiest routes:', err);
-      }
+      setGraphData({ nodes, links });
+    } catch (err) {
+      console.error('Error fetching busiest routes:', err);
+    }
+  };
+
+  useEffect(() => {
+    // Fetch only when admin triggers a refresh (no automatic fetch by default).
+    const handler = (e) => {
+      if (e?.detail?.key === 'busiestRoutes') fetchRoutes();
     };
-
-    fetchRoutes();
+    window.addEventListener('admin:refresh', handler);
+    return () => window.removeEventListener('admin:refresh', handler);
   }, []);
 
   return (

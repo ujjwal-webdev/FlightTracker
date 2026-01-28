@@ -4,10 +4,6 @@ import api from '../services/api'; // Axios instance
 function BusiestRoutes() {
   const [routes, setRoutes] = useState([]);
 
-  useEffect(() => {
-    fetchBusiestRoutes();
-  }, []);
-
   const fetchBusiestRoutes = async () => {
     try {
       const res = await api.get('/flights/busiest'); 
@@ -16,6 +12,15 @@ function BusiestRoutes() {
       console.error('Error fetching busiest routes', err);
     }
   };
+
+  useEffect(() => {
+    // Fetch only when admin triggers a refresh (no automatic fetch by default).
+    const handler = (e) => {
+      if (e?.detail?.key === 'busiestRoutes') fetchBusiestRoutes();
+    };
+    window.addEventListener('admin:refresh', handler);
+    return () => window.removeEventListener('admin:refresh', handler);
+  }, []);
 
   return (
     <div className="p-8">
