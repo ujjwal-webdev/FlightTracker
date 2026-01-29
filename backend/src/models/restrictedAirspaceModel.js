@@ -28,4 +28,7 @@ const restrictedAirspaceSchema = new mongoose.Schema({
   updatedAt: Date
 }, { timestamps: true });
 
+// Enables efficient geospatial queries (bbox filtering, intersections).
+restrictedAirspaceSchema.index({ geometry: '2dsphere' });
+
 module.exports = mongoose.model('RestrictedAirspace', restrictedAirspaceSchema);

@@ -12,7 +12,6 @@ const getRestrictedAirspaces = async () => {
 
 async function checkNFZViolationsBatch(limit = 50) {
   const keys = await scanKeys('flight:*', { limit });
-  const nfzZones = await RestrictedAirspace.find({}, 'name geometry').lean();
 
   for (const key of keys) {
     const data = await redisClient.get(key);
@@ -30,7 +29,22 @@ async function checkNFZViolationsBatch(limit = 50) {
 
     const flightLine = turf.lineString([start.geometry.coordinates, destination.geometry.coordinates]);
 
-    for (const zone of nfzZones) {
+    // Query only zones that intersect the flight segment (keeps memory small).
+    const candidates = await RestrictedAirspace.find(
+      {
+        geometry: {
+          $geoIntersects: {
+            $geometry: {
+              type: 'LineString',
+              coordinates: flightLine.geometry.coordinates,
+            }
+          }
+        }
+      },
+      'name geometry'
+    ).lean();
+
+    for (const zone of candidates) {
       const polygon = turf.polygon(zone.geometry.coordinates);
       if (turf.booleanIntersects(flightLine, polygon)) {
         await NFZAlert.findOneAndUpdate(

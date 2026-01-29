@@ -7,6 +7,7 @@ import { Polygon } from 'react-leaflet';
 
 const AircraftMap = () => {
   const [flights, setFlights] = useState([]);
+  const [mapInstance, setMapInstance] = useState(null);
 
   // Custom plane icon
   const planeIcon = new L.Icon({
@@ -71,16 +72,25 @@ const AircraftMap = () => {
 
   const fetchRestrictedZones = async () => {
     try {
-      const res = await api.get('/airspaces/restricted');
+      const params = { limit: 300 };
+      if (mapInstance?.getBounds) {
+        const b = mapInstance.getBounds();
+        const bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(',');
+        params.bbox = bbox;
+      }
+
+      const res = await api.get('/airspaces/restricted', { params });
       setRestrictedZones(res.data);
     } catch (err) {
       console.error('Error fetching restricted zones:', err.message);
     }
   };
   useEffect(() => {
-    if (showNFZs && restrictedZones.length === 0) {
-      fetchRestrictedZones();
+    if (!showNFZs) {
+      setRestrictedZones([]);
+      return;
     }
+    fetchRestrictedZones();
   }, [showNFZs]);
     
 
@@ -105,6 +115,7 @@ const AircraftMap = () => {
         center={[20, 0]}
         zoom={2}
         className="w-full h-full"
+        whenCreated={setMapInstance}
         >
         <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
